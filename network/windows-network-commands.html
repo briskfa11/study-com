@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>1. 윈도우 네트워크 명령어 실습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --ink:#16213A; --muted:#5A6478; --line:#DCE1E9;
+  --accent:#2450D8; --accent-soft:#E6ECFC; --lab:#B97F00; --lab-soft:#FFF4D6;
+  --warn:#C2410C; --warn-soft:#FDEBDD; --ok:#1F8A5B;
+  --term-bg:#0C1B33; --term-fg:#D6E2F5; --term-dim:#7F93B4; --term-prompt:#8FB3FF;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --mono:"JetBrains Mono",Consolas,"D2Coding","Courier New",monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1420; --surface:#151D2C; --ink:#E6EBF3; --muted:#98A3B8; --line:#26324A;
+    --accent:#7C9BFF; --accent-soft:#1C2A4D; --lab:#F2B93B; --lab-soft:#2E2610;
+    --warn:#FB923C; --warn-soft:#3A2214; --ok:#4ADE9B;
+    --term-bg:#070D18; --term-fg:#D6E2F5; --term-dim:#6F82A3; --term-prompt:#8FB3FF;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1420; --surface:#151D2C; --ink:#E6EBF3; --muted:#98A3B8; --line:#26324A;
+  --accent:#7C9BFF; --accent-soft:#1C2A4D; --lab:#F2B93B; --lab-soft:#2E2610;
+  --warn:#FB923C; --warn-soft:#3A2214; --ok:#4ADE9B;
+  --term-bg:#070D18; color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 16px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16.5px;line-height:1.7;-webkit-text-size-adjust:100%}
+img{max-width:100%}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:4px}
+code,kbd{font-family:var(--mono);font-size:.92em}
+p code,li code,td code{background:var(--accent-soft);color:var(--ink);padding:.08em .38em;border-radius:5px}
+kbd{border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:.05em .4em;background:var(--surface)}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+/* hero */
+.hero{padding:56px 0 28px;display:grid;gap:36px;grid-template-columns:1fr}
+@media(min-width:900px){.hero{grid-template-columns:1.05fr 1fr;align-items:center;padding-top:72px}}
+.hero h1{font-size:clamp(2rem,5.2vw,3.3rem);line-height:1.15;margin:0 0 18px;letter-spacing:-.02em;font-weight:700}
+.hero .lead{color:var(--muted);font-size:1.08rem;margin:0 0 22px;max-width:34em}
+.facts{display:flex;flex-wrap:wrap;gap:10px;margin:0;padding:0;list-style:none}
+.facts li{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 14px;font-size:.92rem}
+.facts b{font-weight:600}
+
+.term{background:var(--term-bg);color:var(--term-fg);border-radius:12px;font-family:var(--mono);font-size:.84rem;line-height:1.6;overflow:hidden;box-shadow:0 18px 40px -22px rgba(12,27,51,.55)}
+.term-bar{display:flex;align-items:center;gap:8px;padding:9px 14px;background:rgba(255,255,255,.06);font-family:var(--sans);font-size:.78rem;color:var(--term-dim)}
+.term-bar i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.18);display:inline-block}
+.term pre{margin:0;padding:14px 18px 18px;overflow-x:auto;white-space:pre;font-family:inherit}
+.term .p{color:var(--term-prompt)}
+.term .hl{color:#FFD479}
+.term .dim{color:var(--term-dim)}
+.caret{display:inline-block;width:.6em;height:1.1em;background:var(--term-fg);vertical-align:-2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+#heroOut.show{animation:reveal .5s ease-out}
+@keyframes reveal{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){.caret,#heroOut.show{animation:none}html{scroll-behavior:auto}}
+
+/* timeline */
+.timeline{margin:18px 0 8px}
+.timeline h2{font-size:1rem;margin:0 0 10px;color:var(--muted);font-weight:600}
+.tl-bar{display:flex;gap:3px;border-radius:10px;overflow:hidden}
+.tl-bar a{flex-basis:0;display:block;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);padding:8px 8px 9px;min-width:0;transition:background .15s}
+.tl-bar a:hover{background:var(--accent-soft)}
+.tl-bar a.brk{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--bg) 6px 12px)}
+.tl-bar small{display:block;font-family:var(--mono);font-size:.7rem;color:var(--muted)}
+.tl-bar span{display:block;font-size:.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:700px){
+  .tl-bar{flex-direction:column;gap:2px}
+  .tl-bar a{display:flex;justify-content:space-between;align-items:center;flex-basis:auto!important}
+  .tl-bar small{order:2}
+}
+
+/* layout */
+.layout{display:grid;grid-template-columns:1fr;gap:40px;padding:28px 0 80px}
+@media(min-width:1000px){.layout{grid-template-columns:230px minmax(0,1fr)}}
+.side{display:none}
+@media(min-width:1000px){
+  .side{display:block;position:sticky;top:calc(env(safe-area-inset-top,0px) + 24px);align-self:start;font-size:.92rem}
+}
+.side ol{list-style:none;margin:0 0 18px;padding:0;border-left:2px solid var(--line)}
+.side li a{display:block;padding:5px 0 5px 14px;margin-left:-2px;border-left:2px solid transparent;text-decoration:none;color:var(--muted)}
+.side li a:hover,.side li a.on{color:var(--ink);border-left-color:var(--accent)}
+.side li small{font-family:var(--mono);font-size:.72rem;margin-right:6px}
+.prog{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.prog p{margin:0 0 8px;font-weight:600}
+.meter{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--lab);transition:width .3s}
+.prog button{margin-top:10px;font:inherit;font-size:.82rem;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;padding:0}
+
+/* module */
+.mod{padding:8px 0 44px;border-bottom:1px solid var(--line);margin-bottom:44px}
+.mod:last-child{border-bottom:0}
+.mod-head{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start;margin-bottom:18px}
+.mod-no{font-family:var(--mono);font-weight:600;font-size:2.4rem;line-height:1;color:var(--accent);min-width:1.4ch}
+.mod-time{margin:2px 0 4px;font-family:var(--mono);font-size:.82rem;color:var(--muted)}
+.mod h2{margin:0;font-size:clamp(1.45rem,3.4vw,1.9rem);line-height:1.3;letter-spacing:-.01em}
+.mod h2 code{font-size:.95em;background:none;padding:0;color:var(--accent)}
+.goal{margin:6px 0 0;color:var(--muted)}
+.mod h3{font-size:1.12rem;margin:28px 0 10px}
+.prose{max-width:46em}
+
+/* command list */
+.cmds{display:grid;gap:8px;margin:12px 0 18px}
+.cmd{display:grid;grid-template-columns:minmax(0,auto) 1fr auto;gap:4px 14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 10px 9px 14px}
+.cmd code{font-weight:600;color:var(--ink);white-space:nowrap;overflow-x:auto}
+.cmd .d{color:var(--muted);font-size:.93rem}
+.copy{font:inherit;font-size:.8rem;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:6px;padding:3px 10px;cursor:pointer;white-space:nowrap}
+.copy:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:640px){.cmd{grid-template-columns:1fr auto}.cmd .d{grid-column:1/-1;order:3}}
+
+/* lab box */
+.lab{background:var(--lab-soft);border:1.5px solid var(--lab);border-radius:12px;padding:16px 18px 10px;margin:22px 0}
+.lab h4{margin:0 0 8px;font-size:1.02rem;color:var(--ink);display:flex;align-items:center;gap:8px}
+.lab h4::before{content:"";width:12px;height:12px;border-radius:3px;background:var(--lab);display:inline-block}
+.task{display:grid;grid-template-columns:22px 1fr;gap:10px;padding:7px 0;border-top:1px dashed color-mix(in srgb,var(--lab) 40%,transparent);cursor:pointer}
+.task:first-of-type{border-top:0}
+.task input{width:18px;height:18px;margin:4px 0 0;accent-color:var(--lab);cursor:pointer}
+.task input:checked + span{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--lab)}
+
+.note{border-left:4px solid var(--accent);background:var(--accent-soft);padding:12px 16px;border-radius:0 9px 9px 0;margin:18px 0}
+.note.warn{border-left-color:var(--warn);background:var(--warn-soft)}
+.note p{margin:0}
+.note p + p{margin-top:6px}
+
+/* tables */
+.tbl{overflow-x:auto;margin:12px 0 18px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.94rem;min-width:520px}
+th,td{text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;background:var(--bg)}
+tr:last-child td{border-bottom:0}
+
+/* network diagram */
+.net{display:flex;align-items:stretch;gap:0;margin:18px 0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+.node{background:var(--surface);border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;min-width:118px;text-align:center;font-size:.88rem}
+.node b{display:block;font-size:.95rem}
+.node code{font-size:.78rem;color:var(--muted)}
+.node.me{border-color:var(--accent)}
+.arrow{align-self:center;color:var(--muted);padding:0 6px;font-family:var(--mono)}
+@media(max-width:640px){.net{flex-direction:column;align-items:stretch}.arrow{transform:rotate(90deg);padding:2px 0;text-align:center}}
+
+/* steps */
+.steps{counter-reset:s;list-style:none;padding:0;margin:12px 0}
+.steps li{counter-increment:s;display:grid;grid-template-columns:34px 1fr;gap:10px;padding:8px 0}
+.steps li::before{content:counter(s);font-family:var(--mono);font-weight:600;color:var(--surface);background:var(--accent);border-radius:50%;width:26px;height:26px;display:grid;place-items:center;font-size:.85rem;margin-top:2px}
+
+/* my info form */
+.myinfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin:10px 0 6px}
+.myinfo label{font-size:.85rem;color:var(--muted);display:grid;gap:4px}
+.myinfo input{font-family:var(--mono);font-size:.92rem;padding:8px 10px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);width:100%}
+
+/* scenarios & quiz */
+details{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin:10px 0;padding:0 16px}
+summary{cursor:pointer;padding:13px 0;font-weight:600;list-style:none;display:flex;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+";font-family:var(--mono);color:var(--accent);width:1ch}
+details[open] summary::before{content:"−"}
+details > div{padding:0 0 14px;border-top:1px solid var(--line);padding-top:12px}
+details p{margin:0 0 8px}
+
+.break{text-align:center;padding:30px 20px;border:2px dashed var(--line);border-radius:14px;color:var(--muted);margin-bottom:44px}
+.break b{display:block;font-size:1.4rem;color:var(--ink)}
+
+footer{color:var(--muted);font-size:.86rem;padding:20px 0 40px;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <div>
+    <h1>명령 프롬프트로<br>네트워크 들여다보기</h1>
+    <p class="lead">눈에 보이지 않는 네트워크를 Windows 기본 명령어로 직접 확인해 봅니다. 개념은 짧게, 손으로 치는 시간은 길게 잡은 2시간 실습 과정입니다.</p>
+    <ul class="facts">
+      <li><b>대상</b> 컴퓨터공학과 1학년</li>
+      <li><b>시간</b> 120분</li>
+    </ul>
+  </div>
+  <div class="term" aria-label="명령 프롬프트 예시">
+    <div class="term-bar"><i></i><i></i><i></i>&nbsp;명령 프롬프트</div>
+<pre><span class="p">C:\Users\student&gt;</span> <span id="typed"></span><span class="caret" aria-hidden="true"></span>
+<span id="heroOut" hidden>
+Windows IP 구성
+
+무선 LAN 어댑터 Wi-Fi:
+
+   연결별 DNS 접미사. . . . :
+   IPv4 주소 . . . . . . . . : <span class="hl">192.168.0.23</span>
+   서브넷 마스크 . . . . . . : 255.255.255.0
+   기본 게이트웨이 . . . . . : <span class="hl">192.168.0.1</span>
+
+<span class="dim">이 숫자들이 무슨 뜻인지, 오늘 하나씩 알아봅니다.</span></span></pre>
+  </div>
+</header>
+
+<nav class="timeline" aria-label="수업 시간표">
+  <h2>수업 흐름 (막대 길이는 시간 비율)</h2>
+  <div class="tl-bar">
+    <a href="#ready" style="flex-grow:5"><small>0:00</small><span>준비</span></a>
+    <a href="#concept" style="flex-grow:15"><small>0:05</small><span>기초 개념</span></a>
+    <a href="#ipconfig" style="flex-grow:15"><small>0:20</small><span>ipconfig</span></a>
+    <a href="#ping" style="flex-grow:15"><small>0:35</small><span>ping</span></a>
+    <a href="#tracert" style="flex-grow:10"><small>0:50</small><span>tracert</span></a>
+    <a href="#nslookup" style="flex-grow:10"><small>1:00</small><span>nslookup</span></a>
+    <a href="#netstat" style="flex-grow:15"><small>1:10</small><span>netstat</span></a>
+    <a href="#more" style="flex-grow:10"><small>1:25</small><span>arp·route·PS</span></a>
+    <a href="#final" style="flex-grow:25"><small>1:35</small><span>종합 실습</span></a>
+  </div>
+</nav>
+
+<div class="layout">
+<aside class="side" aria-label="목차">
+  <ol id="toc">
+    <li><a href="#ready"><small>0:00</small>준비</a></li>
+    <li><a href="#concept"><small>0:05</small>기초 개념</a></li>
+    <li><a href="#ipconfig"><small>0:20</small>ipconfig</a></li>
+    <li><a href="#ping"><small>0:35</small>ping</a></li>
+    <li><a href="#tracert"><small>0:50</small>tracert</a></li>
+    <li><a href="#nslookup"><small>1:00</small>nslookup</a></li>
+    <li><a href="#netstat"><small>1:10</small>netstat</a></li>
+    <li><a href="#more"><small>1:25</small>그 밖의 명령</a></li>
+    <li><a href="#final"><small>1:35</small>종합 실습</a></li>
+    <li><a href="#cheat"><small>&nbsp;&nbsp;+&nbsp;</small>요약표</a></li>
+  </ol>
+  <div class="prog">
+    <p>실습 완료 <span id="progText">0 / 0</span></p>
+    <div class="meter"><i id="progBar"></i></div>
+    <button type="button" id="resetBtn">체크 초기화</button>
+  </div>
+</aside>
+
+<main>
+
+<!-- 0 준비 -->
+<section class="mod" id="ready">
+  <div class="mod-head">
+    <span class="mod-no">0</span>
+    <div>
+      <p class="mod-time">0:00–0:05 (5분)</p>
+      <h2>실습 환경 준비</h2>
+      <p class="goal">명령 프롬프트를 열고, 오늘 계속 쓸 기본 조작을 익힙니다.</p>
+    </div>
+  </div>
+  <div class="prose">
+    <p><kbd>Win</kbd> + <kbd>R</kbd>을 누르고 <code>cmd</code>를 입력하면 명령 프롬프트가 열립니다. 일부 명령(<code>ipconfig /flushdns</code>, <code>netstat -b</code>)은 관리자 권한이 필요하니, 시작 메뉴에서 “cmd”를 검색한 뒤 <b>관리자 권한으로 실행</b>으로 여는 것을 권장합니다.</p>
+  </div>
+  <div class="cmds">
+    <div class="cmd"><code>ipconfig /?</code><span class="d">어떤 명령이든 뒤에 /? 를 붙이면 도움말</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>cls</code><span class="d">화면 지우기</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ipconfig | clip</code><span class="d">결과를 클립보드로 복사 (메모장에 붙여넣기)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ipconfig /all &gt; mynet.txt</code><span class="d">결과를 파일로 저장</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <div class="note"><p>시간 절약 키: <kbd>↑</kbd> 이전 명령 다시 불러오기, <kbd>Tab</kbd> 자동 완성, <kbd>Ctrl</kbd> + <kbd>C</kbd> 실행 중인 명령 멈추기.</p></div>
+  <div class="lab">
+    <h4>실습 0</h4>
+    <label class="task"><input type="checkbox" data-id="r1"><span>관리자 권한으로 명령 프롬프트 열기 (창 제목에 “관리자” 표시 확인)</span></label>
+    <label class="task"><input type="checkbox" data-id="r2"><span><code>hostname</code>을 입력해 내 컴퓨터 이름 확인하기</span></label>
+    <label class="task"><input type="checkbox" data-id="r3"><span><code>ping /?</code>로 도움말을 띄우고 <code>-n</code> 옵션 설명 찾아보기</span></label>
+  </div>
+</section>
+
+<!-- 1 개념 -->
+<section class="mod" id="concept">
+  <div class="mod-head">
+    <span class="mod-no">1</span>
+    <div>
+      <p class="mod-time">0:05–0:20 (15분)</p>
+      <h2>꼭 필요한 네트워크 기초</h2>
+      <p class="goal">명령어 결과에 나오는 용어를 읽을 수 있을 만큼만 정리합니다.</p>
+    </div>
+  </div>
+  <div class="prose"><p>집에서 웹사이트 하나를 열 때 데이터는 대략 아래 길을 지나갑니다. 오늘 배우는 명령어들은 이 길의 각 구간을 하나씩 점검하는 도구입니다.</p></div>
+  <div class="net" role="img" aria-label="내 PC에서 공유기, 통신사, 인터넷을 거쳐 웹 서버까지 가는 경로">
+    <div class="node me"><b>내 PC</b><code>192.168.0.23</code></div>
+    <span class="arrow">→</span>
+    <div class="node"><b>공유기</b><code>게이트웨이 192.168.0.1</code></div>
+    <span class="arrow">→</span>
+    <div class="node"><b>통신사(ISP)</b><code>공인 IP 부여</code></div>
+    <span class="arrow">→</span>
+    <div class="node"><b>인터넷</b><code>수많은 라우터</code></div>
+    <span class="arrow">→</span>
+    <div class="node"><b>웹 서버</b><code>예: google.com</code></div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>용어</th><th>뜻</th><th>비유</th></tr></thead>
+    <tbody>
+      <tr><td>IP 주소</td><td>네트워크에서 기기를 찾기 위한 논리 주소 (IPv4는 0~255 숫자 4개)</td><td>집 주소</td></tr>
+      <tr><td>서브넷 마스크</td><td>IP 중 어디까지가 “같은 동네(네트워크)”인지 나타냄</td><td>우편번호 범위</td></tr>
+      <tr><td>기본 게이트웨이</td><td>다른 네트워크로 나갈 때 거치는 출구 (보통 공유기)</td><td>동네 출입구</td></tr>
+      <tr><td>DNS</td><td>도메인 이름(naver.com)을 IP로 바꿔 주는 시스템</td><td>전화번호부</td></tr>
+      <tr><td>MAC 주소</td><td>랜카드에 새겨진 물리 주소 (예: 3C-52-82-1A-2B-3C)</td><td>기기 고유 번호</td></tr>
+      <tr><td>포트</td><td>한 컴퓨터 안에서 어느 프로그램으로 갈지 구분하는 번호</td><td>아파트 호수</td></tr>
+      <tr><td>DHCP</td><td>IP 주소를 자동으로 나눠 주는 서비스</td><td>주소 자동 배정 창구</td></tr>
+    </tbody>
+  </table></div>
+  <h3>특별한 IP 대역 외우기</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>범위</th><th>의미</th></tr></thead>
+    <tbody>
+      <tr><td><code>10.x.x.x</code>, <code>172.16~31.x.x</code>, <code>192.168.x.x</code></td><td>사설 IP. 집·학교 내부에서만 쓰고 인터넷에선 직접 보이지 않음</td></tr>
+      <tr><td><code>127.0.0.1</code></td><td>루프백. “나 자신”을 가리킴</td></tr>
+      <tr><td><code>169.254.x.x</code></td><td>DHCP에서 주소를 못 받았을 때 Windows가 스스로 붙이는 주소. <b>이게 보이면 연결 문제 신호</b></td></tr>
+      <tr><td><code>8.8.8.8</code>, <code>1.1.1.1</code></td><td>Google, Cloudflare의 공개 DNS 서버. 인터넷 연결 테스트용으로 자주 씀</td></tr>
+    </tbody>
+  </table></div>
+  <div class="lab">
+    <h4>실습 1 (짝 토론 3분)</h4>
+    <label class="task"><input type="checkbox" data-id="c1"><span><code>192.168.0.23</code>과 <code>192.168.0.77</code>(마스크 255.255.255.0)은 같은 네트워크인가? 이유를 말해 보기</span></label>
+    <label class="task"><input type="checkbox" data-id="c2"><span>내 IP가 <code>169.254.10.5</code>라면 어떤 상황일지 추측해 보기</span></label>
+  </div>
+</section>
+
+<!-- 2 ipconfig -->
+<section class="mod" id="ipconfig">
+  <div class="mod-head">
+    <span class="mod-no">2</span>
+    <div>
+      <p class="mod-time">0:20–0:35 (15분)</p>
+      <h2><code>ipconfig</code></h2>
+      <p class="goal">내 컴퓨터의 네트워크 설정을 확인하고, IP와 DNS 캐시를 다시 받아 봅니다.</p>
+    </div>
+  </div>
+  <div class="cmds">
+    <div class="cmd"><code>ipconfig</code><span class="d">IP, 서브넷 마스크, 게이트웨이 요약</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ipconfig /all</code><span class="d">MAC 주소, DHCP 서버, DNS 서버, 임대 시간까지 전부</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ipconfig /release</code><span class="d">DHCP로 받은 IP 반납 (연결 끊김)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ipconfig /renew</code><span class="d">DHCP에서 IP 다시 받기</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ipconfig /displaydns</code><span class="d">PC가 기억하는 DNS 조회 결과(캐시) 보기</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ipconfig /flushdns</code><span class="d">DNS 캐시 비우기 (관리자 권한)</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <h3><code>ipconfig /all</code>에서 봐야 할 줄</h3>
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i>&nbsp;출력 예시 (일부)</div>
+<pre>무선 LAN 어댑터 Wi-Fi:
+
+   설명. . . . . . . . . . . . : Intel(R) Wi-Fi 6 AX201 160MHz
+   <span class="hl">물리적 주소 . . . . . . . . : 3C-52-82-1A-2B-3C</span>   <span class="dim">← MAC 주소</span>
+   <span class="hl">DHCP 사용 . . . . . . . . . : 예</span>                  <span class="dim">← 자동 할당 여부</span>
+   IPv4 주소 . . . . . . . . . : 192.168.0.23(기본 설정)
+   서브넷 마스크 . . . . . . . : 255.255.255.0
+   임대 시작 날짜. . . . . . . : 2026년 11월 5일 목요일 오전 9:02:11
+   임대 만료 날짜. . . . . . . : 2026년 11월 6일 금요일 오전 9:02:11
+   기본 게이트웨이 . . . . . . : 192.168.0.1
+   <span class="hl">DHCP 서버 . . . . . . . . . : 192.168.0.1</span>        <span class="dim">← IP를 준 곳</span>
+   <span class="hl">DNS 서버. . . . . . . . . . : 168.126.63.1</span>       <span class="dim">← 이름을 물어보는 곳</span></pre>
+  </div>
+  <div class="note warn"><p><code>ipconfig /release</code>를 실행하면 그 즉시 인터넷이 끊깁니다. 반드시 바로 이어서 <code>/renew</code>를 실행하세요. 원격 접속 중인 PC에서는 절대 실행하지 않습니다.</p></div>
+  <div class="lab">
+    <h4>실습 2</h4>
+    <label class="task"><input type="checkbox" data-id="i1"><span><code>ipconfig /all</code>을 실행하고 아래 칸에 내 네트워크 정보를 적기 (이 브라우저에만 저장됩니다)</span></label>
+    <div class="myinfo">
+      <label>IPv4 주소<input data-field="ip" placeholder="192.168.0.23" autocomplete="off"></label>
+      <label>서브넷 마스크<input data-field="mask" placeholder="255.255.255.0" autocomplete="off"></label>
+      <label>기본 게이트웨이<input data-field="gw" placeholder="192.168.0.1" autocomplete="off"></label>
+      <label>DNS 서버<input data-field="dns" placeholder="168.126.63.1" autocomplete="off"></label>
+      <label>MAC 주소<input data-field="mac" placeholder="3C-52-82-1A-2B-3C" autocomplete="off"></label>
+    </div>
+    <label class="task"><input type="checkbox" data-id="i2"><span>내 IP가 사설 IP인지 공인 IP인지 판별하기</span></label>
+    <label class="task"><input type="checkbox" data-id="i3"><span><code>/release</code> → <code>ipconfig</code>로 IP가 사라졌는지 확인 → <code>/renew</code>로 복구</span></label>
+    <label class="task"><input type="checkbox" data-id="i4"><span>브라우저로 사이트 몇 개 연 뒤 <code>/displaydns</code>, 이어서 <code>/flushdns</code> 후 다시 <code>/displaydns</code>로 비교</span></label>
+  </div>
+</section>
+
+<!-- 3 ping -->
+<section class="mod" id="ping">
+  <div class="mod-head">
+    <span class="mod-no">3</span>
+    <div>
+      <p class="mod-time">0:35–0:50 (15분)</p>
+      <h2><code>ping</code></h2>
+      <p class="goal">상대가 응답하는지, 얼마나 빠른지 확인하고, 문제 구간을 단계별로 좁혀 봅니다.</p>
+    </div>
+  </div>
+  <div class="prose"><p>ping은 상대에게 ICMP “에코 요청”을 보내고 “에코 응답”이 돌아오는 시간을 잽니다. 소리를 지르고 메아리가 돌아오는 시간을 재는 것과 같습니다.</p></div>
+  <div class="cmds">
+    <div class="cmd"><code>ping google.com</code><span class="d">기본 4회 전송</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ping -n 10 8.8.8.8</code><span class="d">10회 전송</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ping -t 8.8.8.8</code><span class="d">멈출 때까지 계속 (Ctrl+C로 종료)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ping -l 1000 8.8.8.8</code><span class="d">패킷 크기를 1000바이트로</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>ping -4 google.com</code><span class="d">IPv4로 강제</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i>&nbsp;출력 예시</div>
+<pre>Ping google.com [142.250.207.46] 32바이트 데이터 사용:
+142.250.207.46의 응답: 바이트=32 <span class="hl">시간=31ms</span> <span class="hl">TTL=116</span>
+142.250.207.46의 응답: 바이트=32 시간=32ms TTL=116
+142.250.207.46의 응답: 바이트=32 시간=31ms TTL=116
+142.250.207.46의 응답: 바이트=32 시간=33ms TTL=116
+
+142.250.207.46에 대한 Ping 통계:
+    패킷: 보냄 = 4, 받음 = 4, <span class="hl">손실 = 0 (0% 손실)</span>,
+왕복 시간(밀리초):
+    최소 = 31ms, 최대 = 33ms, 평균 = 32ms</pre>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>이런 메시지가 나오면</th><th>의미</th></tr></thead>
+    <tbody>
+      <tr><td>요청 시간이 만료되었습니다.</td><td>응답이 안 옴. 상대가 꺼졌거나, 경로 문제, 또는 방화벽이 ping을 막는 경우</td></tr>
+      <tr><td>대상 호스트에 연결할 수 없습니다.</td><td>가는 길 자체를 못 찾음 (라우팅 문제, 게이트웨이 문제)</td></tr>
+      <tr><td>호스트 ○○을(를) 찾을 수 없습니다.</td><td>이름을 IP로 못 바꿈. 대부분 DNS 문제</td></tr>
+    </tbody>
+  </table></div>
+  <h3>5단계 진단법 (가까운 곳부터 먼 곳으로)</h3>
+  <ol class="steps">
+    <li><span><code>ping 127.0.0.1</code>: 실패하면 내 PC의 네트워크 기능 자체 문제</span></li>
+    <li><span><code>ping 내IP</code>: 실패하면 랜카드나 드라이버 문제</span></li>
+    <li><span><code>ping 게이트웨이</code>: 실패하면 공유기까지의 연결(Wi-Fi, 케이블) 문제</span></li>
+    <li><span><code>ping 8.8.8.8</code>: 실패하면 공유기 밖, 인터넷 회선 문제</span></li>
+    <li><span><code>ping google.com</code>: 4번은 되는데 이것만 실패하면 DNS 문제</span></li>
+  </ol>
+  <div class="note"><p>TTL은 패킷이 라우터를 지날 때마다 1씩 줄어드는 수명입니다. Windows는 보통 128, Linux는 64에서 시작하므로, 남은 값을 보면 상대 OS와 거쳐 온 라우터 수를 대충 짐작할 수 있습니다. 위 예시의 116은 128에서 12번 줄어든 값으로 볼 수 있습니다.</p></div>
+  <div class="lab">
+    <h4>실습 3</h4>
+    <label class="task"><input type="checkbox" data-id="p1"><span>5단계 진단법을 순서대로 모두 실행하고 각 단계 평균 시간 비교하기</span></label>
+    <label class="task"><input type="checkbox" data-id="p2"><span><code>ping -t 8.8.8.8</code>을 켜 둔 채 Wi-Fi를 잠깐 껐다 켜 보고 결과 변화 관찰하기</span></label>
+    <label class="task"><input type="checkbox" data-id="p3"><span>국내 사이트와 해외 사이트(예: <code>www.bbc.co.uk</code>)의 응답 시간 차이 비교하기</span></label>
+    <label class="task"><input type="checkbox" data-id="p4"><span>존재하지 않는 주소 <code>ping abc.invalid</code>를 실행해 어떤 오류가 나는지 확인하기</span></label>
+  </div>
+</section>
+
+<!-- 4 tracert -->
+<section class="mod" id="tracert">
+  <div class="mod-head">
+    <span class="mod-no">4</span>
+    <div>
+      <p class="mod-time">0:50–1:00 (10분)</p>
+      <h2><code>tracert</code>, <code>pathping</code></h2>
+      <p class="goal">목적지까지 어떤 라우터를 거쳐 가는지, 어디서 느려지는지 확인합니다.</p>
+    </div>
+  </div>
+  <div class="prose"><p>tracert는 TTL을 1, 2, 3… 으로 늘려 가며 패킷을 보냅니다. TTL이 0이 되는 라우터가 “시간 초과” 응답을 보내 주기 때문에, 그 응답을 모으면 경로 지도가 완성됩니다.</p></div>
+  <div class="cmds">
+    <div class="cmd"><code>tracert google.com</code><span class="d">경로 추적 (최대 30홉)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>tracert -d 8.8.8.8</code><span class="d">라우터 이름 조회 생략, 훨씬 빠름</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>tracert -h 10 google.com</code><span class="d">최대 10홉까지만</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>pathping -n google.com</code><span class="d">구간별 손실률 측정 (수 분 소요)</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i>&nbsp;출력 예시</div>
+<pre>최대 30홉 이상의
+8.8.8.8(으)로 가는 경로 추적:
+
+  1     2 ms     1 ms     1 ms  192.168.0.1      <span class="dim">← 우리 집 공유기</span>
+  2     5 ms     4 ms     5 ms  10.32.0.1        <span class="dim">← 통신사 내부망</span>
+  3     *        *        *     요청 시간이 만료되었습니다.
+  4     8 ms     7 ms     8 ms  112.189.28.69
+  ...
+  9    32 ms    31 ms    32 ms  8.8.8.8
+
+추적을 완료했습니다.</pre>
+  </div>
+  <div class="note"><p><code>* * *</code>는 그 라우터가 응답을 안 해 주는 것일 뿐, 다음 줄이 정상으로 이어지면 장애가 아닙니다. 어느 줄부터 시간이 확 뛰고 그 뒤로도 계속 높다면, 그 구간이 느린 곳입니다.</p></div>
+  <div class="lab">
+    <h4>실습 4</h4>
+    <label class="task"><input type="checkbox" data-id="t1"><span><code>tracert -d 8.8.8.8</code> 결과에서 1번 줄이 내 게이트웨이 IP와 같은지 확인하기</span></label>
+    <label class="task"><input type="checkbox" data-id="t2"><span>국내 사이트와 해외 사이트의 홉 수, 시간이 크게 늘어나는 지점 비교하기</span></label>
+    <label class="task"><input type="checkbox" data-id="t3"><span>(과제) 집에서 <code>pathping</code>을 실행해 손실률 열 읽어 보기</span></label>
+  </div>
+</section>
+
+<!-- 5 nslookup -->
+<section class="mod" id="nslookup">
+  <div class="mod-head">
+    <span class="mod-no">5</span>
+    <div>
+      <p class="mod-time">1:00–1:10 (10분)</p>
+      <h2><code>nslookup</code></h2>
+      <p class="goal">도메인 이름이 어떤 IP로 바뀌는지 DNS 서버에 직접 물어봅니다.</p>
+    </div>
+  </div>
+  <div class="cmds">
+    <div class="cmd"><code>nslookup naver.com</code><span class="d">기본 DNS 서버에 질의</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>nslookup naver.com 8.8.8.8</code><span class="d">Google DNS에게 물어보기</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>nslookup -type=MX gmail.com</code><span class="d">메일 서버 레코드 조회</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>nslookup -type=NS naver.com</code><span class="d">이 도메인을 관리하는 네임서버</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i>&nbsp;출력 예시 (IP는 예시)</div>
+<pre>서버:    UnKnown
+Address:  192.168.0.1               <span class="dim">← 내가 물어본 DNS 서버</span>
+
+<span class="hl">권한 없는 응답:</span>                     <span class="dim">← 캐시에서 대신 답해 줌</span>
+이름:    naver.com
+Addresses:  223.130.200.236
+          223.130.192.247</pre>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>레코드</th><th>내용</th></tr></thead>
+    <tbody>
+      <tr><td><code>A</code> / <code>AAAA</code></td><td>도메인의 IPv4 / IPv6 주소</td></tr>
+      <tr><td><code>CNAME</code></td><td>다른 이름의 별칭 (www.example.com → example.com)</td></tr>
+      <tr><td><code>MX</code></td><td>메일을 받는 서버</td></tr>
+      <tr><td><code>NS</code></td><td>그 도메인을 책임지는 네임서버</td></tr>
+      <tr><td><code>TXT</code></td><td>메모 형식 정보 (도메인 소유 인증, 스팸 방지 설정 등)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="note"><p>대화형 모드도 있습니다. <code>nslookup</code>만 입력하면 <code>&gt;</code> 프롬프트가 뜨고, <code>set type=MX</code>, <code>gmail.com</code>처럼 여러 번 질의한 뒤 <code>exit</code>로 나옵니다.</p></div>
+  <div class="lab">
+    <h4>실습 5</h4>
+    <label class="task"><input type="checkbox" data-id="n1"><span>자주 가는 사이트 3곳의 IP 주소 조회하기 (주소가 여러 개 나오는 곳이 있는지?)</span></label>
+    <label class="task"><input type="checkbox" data-id="n2"><span>같은 도메인을 기본 DNS, <code>8.8.8.8</code>, <code>1.1.1.1</code>에 각각 물어보고 결과 비교하기</span></label>
+    <label class="task"><input type="checkbox" data-id="n3"><span>우리 학교 도메인의 <code>MX</code> 레코드 조회하기</span></label>
+  </div>
+</section>
+
+<!-- 6 netstat -->
+<section class="mod" id="netstat">
+  <div class="mod-head">
+    <span class="mod-no">6</span>
+    <div>
+      <p class="mod-time">1:10–1:25 (15분)</p>
+      <h2><code>netstat</code></h2>
+      <p class="goal">지금 내 PC가 누구와 연결되어 있고, 어떤 포트를 열고 있는지 확인합니다.</p>
+    </div>
+  </div>
+  <div class="cmds">
+    <div class="cmd"><code>netstat -an</code><span class="d">모든 연결과 대기 포트를 숫자로</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>netstat -ano</code><span class="d">위 내용 + 프로세스 번호(PID)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>netstat -b</code><span class="d">연결마다 프로그램 이름 표시 (관리자)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>netstat -an | findstr LISTENING</code><span class="d">외부 접속을 기다리는 포트만</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>netstat -ano | findstr :443</code><span class="d">HTTPS(443) 연결만 골라 보기</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>tasklist /fi "PID eq 8840"</code><span class="d">PID로 프로그램 이름 찾기 (숫자는 바꿔서)</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <div class="term">
+    <div class="term-bar"><i></i><i></i><i></i>&nbsp;netstat -ano 출력 예시</div>
+<pre>  프로토콜  로컬 주소              외부 주소              상태            PID
+  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING       1120
+  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING       4
+  TCP    192.168.0.23:51234     <span class="hl">142.250.207.46:443</span>     <span class="hl">ESTABLISHED</span>     <span class="hl">8840</span>
+  TCP    192.168.0.23:51240     223.130.200.236:443    TIME_WAIT       0</pre>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>상태</th><th>의미</th></tr></thead>
+    <tbody>
+      <tr><td><code>LISTENING</code></td><td>접속을 기다리는 중 (서버 역할)</td></tr>
+      <tr><td><code>ESTABLISHED</code></td><td>지금 연결되어 데이터를 주고받는 중</td></tr>
+      <tr><td><code>TIME_WAIT</code></td><td>연결을 끝내고 잠시 정리 중</td></tr>
+      <tr><td><code>CLOSE_WAIT</code></td><td>상대는 끊었는데 내 쪽 프로그램이 아직 안 닫음</td></tr>
+      <tr><td><code>SYN_SENT</code></td><td>연결 요청을 보내고 응답 기다리는 중</td></tr>
+    </tbody>
+  </table></div>
+  <h3>자주 보는 포트 번호</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>포트</th><th>서비스</th><th>포트</th><th>서비스</th></tr></thead>
+    <tbody>
+      <tr><td>20, 21</td><td>FTP (파일 전송)</td><td>443</td><td>HTTPS (보안 웹)</td></tr>
+      <tr><td>22</td><td>SSH (원격 접속)</td><td>445</td><td>SMB (Windows 파일 공유)</td></tr>
+      <tr><td>53</td><td>DNS</td><td>3306</td><td>MySQL</td></tr>
+      <tr><td>80</td><td>HTTP (웹)</td><td>3389</td><td>RDP (원격 데스크톱)</td></tr>
+    </tbody>
+  </table></div>
+  <div class="lab">
+    <h4>실습 6</h4>
+    <label class="task"><input type="checkbox" data-id="s1"><span>브라우저로 사이트를 하나 열고 <code>netstat -ano | findstr :443</code>으로 ESTABLISHED 연결 찾기</span></label>
+    <label class="task"><input type="checkbox" data-id="s2"><span>찾은 PID를 <code>tasklist /fi "PID eq 번호"</code>에 넣어 어떤 프로그램인지 확인하기</span></label>
+    <label class="task"><input type="checkbox" data-id="s3"><span><code>netstat -an | findstr LISTENING</code>으로 내 PC가 열어 둔 포트 목록 보고, 아는 번호 찾아보기</span></label>
+    <label class="task"><input type="checkbox" data-id="s4"><span>(관리자) <code>netstat -b</code>로 프로그램 이름이 함께 나오는지 확인하기</span></label>
+  </div>
+</section>
+
+<!-- 7 more -->
+<section class="mod" id="more">
+  <div class="mod-head">
+    <span class="mod-no">7</span>
+    <div>
+      <p class="mod-time">1:25–1:35 (10분)</p>
+      <h2>그 밖의 유용한 명령과 PowerShell</h2>
+      <p class="goal">MAC 주소 표, 라우팅 표, Wi-Fi 정보를 보고, PowerShell의 최신 명령도 맛봅니다.</p>
+    </div>
+  </div>
+  <h3>명령 프롬프트</h3>
+  <div class="cmds">
+    <div class="cmd"><code>arp -a</code><span class="d">같은 네트워크 기기의 IP ↔ MAC 대응표</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>getmac /v</code><span class="d">어댑터별 MAC 주소</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>route print</code><span class="d">라우팅 표 (패킷을 어디로 보낼지 정한 규칙)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>netsh wlan show interfaces</code><span class="d">연결된 Wi-Fi 이름, 신호 세기, 속도</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>netsh wlan show profiles</code><span class="d">저장된 Wi-Fi 목록</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <h3>PowerShell 버전 (시작 메뉴에서 “PowerShell” 실행)</h3>
+  <div class="cmds">
+    <div class="cmd"><code>Get-NetIPConfiguration</code><span class="d">ipconfig의 PowerShell 버전</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>Test-NetConnection google.com -Port 443</code><span class="d">특정 포트까지 열려 있는지 확인 (ping이 막혀도 가능)</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>Resolve-DnsName naver.com -Type MX</code><span class="d">nslookup의 PowerShell 버전</span><button class="copy" type="button">복사</button></div>
+    <div class="cmd"><code>Get-NetTCPConnection -State Established</code><span class="d">netstat의 PowerShell 버전</span><button class="copy" type="button">복사</button></div>
+  </div>
+  <div class="note"><p>ping은 ICMP만 확인하지만 <code>Test-NetConnection -Port</code>는 실제 서비스 포트(TCP)까지 확인합니다. “ping은 안 되는데 웹사이트는 열린다”는 상황을 설명할 때 좋은 예시입니다.</p></div>
+  <div class="lab">
+    <h4>실습 7</h4>
+    <label class="task"><input type="checkbox" data-id="m1"><span><code>arp -a</code>에서 내 게이트웨이 IP 옆의 MAC 주소 찾기 (공유기의 MAC)</span></label>
+    <label class="task"><input type="checkbox" data-id="m2"><span><code>route print</code>에서 대상 <code>0.0.0.0</code> 줄의 게이트웨이가 무엇인지 확인하기</span></label>
+    <label class="task"><input type="checkbox" data-id="m3"><span><code>Test-NetConnection google.com -Port 443</code>와 <code>-Port 22</code> 결과 비교하기</span></label>
+    <label class="task"><input type="checkbox" data-id="m4"><span><code>netsh wlan show interfaces</code>로 지금 Wi-Fi 신호 세기(%) 확인하기</span></label>
+  </div>
+</section>
+
+<!-- 8 final -->
+<section class="mod" id="final">
+  <div class="mod-head">
+    <span class="mod-no">8</span>
+    <div>
+      <p class="mod-time">1:35–2:00 (25분)</p>
+      <h2>종합 실습: 장애 해결 시나리오</h2>
+      <p class="goal">증상만 보고 어떤 명령을 어떤 순서로 쓸지 직접 정해 봅니다. 조별로 먼저 토론한 뒤 해설을 펼치세요.</p>
+    </div>
+  </div>
+
+  <details>
+    <summary>시나리오 A. “인터넷이 아예 안 돼요.” ipconfig를 보니 IPv4가 169.254.37.12</summary>
+    <div>
+      <p><b>원인:</b> DHCP 서버(공유기)에서 IP를 못 받아 Windows가 임시 주소를 스스로 붙인 상태입니다.</p>
+      <p><b>순서:</b> <code>ipconfig /release</code> → <code>ipconfig /renew</code> → 그래도 안 되면 케이블, Wi-Fi 연결, 공유기 재부팅 확인 → <code>ping 게이트웨이</code>로 확인.</p>
+    </div>
+  </details>
+  <details>
+    <summary>시나리오 B. ping 8.8.8.8은 되는데 ping google.com은 “호스트를 찾을 수 없습니다”</summary>
+    <div>
+      <p><b>원인:</b> 인터넷 회선은 정상이고 이름 변환(DNS)만 실패한 상황입니다.</p>
+      <p><b>순서:</b> <code>nslookup google.com</code> 실패 확인 → <code>nslookup google.com 8.8.8.8</code>은 성공하는지 확인 → 성공하면 DNS 서버 설정 문제 → <code>ipconfig /flushdns</code> 후 네트워크 설정에서 DNS를 8.8.8.8 등으로 변경.</p>
+    </div>
+  </details>
+  <details>
+    <summary>시나리오 C. 해외 사이트 하나만 유독 느려요</summary>
+    <div>
+      <p><b>순서:</b> <code>ping</code>으로 평균 시간과 손실률 확인 → <code>tracert -d 대상</code>으로 시간이 급증하는 홉 찾기 → <code>pathping</code>으로 그 구간 손실률 확인.</p>
+      <p>해외로 나가는 구간에서 시간이 늘어나는 것은 물리적 거리 때문에 정상일 수 있습니다. 손실이 계속 생기는지가 핵심입니다.</p>
+    </div>
+  </details>
+  <details>
+    <summary>시나리오 D. 아무것도 안 켰는데 네트워크 표시등이 계속 깜빡여요</summary>
+    <div>
+      <p><b>순서:</b> <code>netstat -ano</code>로 ESTABLISHED 연결 확인 → 외부 주소와 PID 기록 → <code>tasklist /fi "PID eq 번호"</code>로 프로그램 확인 → 모르는 프로그램이면 작업 관리자에서 파일 위치 확인.</p>
+      <p>대부분은 Windows 업데이트, 클라우드 동기화, 메신저 같은 정상 프로그램입니다.</p>
+    </div>
+  </details>
+
+  <h3>마무리 퀴즈 (5문제)</h3>
+  <details>
+    <summary>Q1. 내 PC의 MAC 주소와 DNS 서버를 한 번에 보려면?</summary>
+    <div><p><code>ipconfig /all</code></p></div>
+  </details>
+  <details>
+    <summary>Q2. ping 결과의 TTL=55. 상대는 Windows일까 Linux일까?</summary>
+    <div><p>Linux 계열일 가능성이 큽니다. 64에서 9번 줄었다고 보는 게 자연스럽습니다. (128에서 73번 줄었다고 보기엔 홉이 너무 많음)</p></div>
+  </details>
+  <details>
+    <summary>Q3. 사이트 IP가 바뀌었는데 내 PC만 옛날 주소로 접속해요. 어떤 명령?</summary>
+    <div><p><code>ipconfig /flushdns</code>로 DNS 캐시를 비웁니다.</p></div>
+  </details>
+  <details>
+    <summary>Q4. tracert 중간에 * * * 가 한 줄 있고, 그 뒤는 정상. 장애일까?</summary>
+    <div><p>아닙니다. 그 라우터가 응답을 보내지 않도록 설정되어 있을 뿐, 패킷은 정상적으로 지나갔습니다.</p></div>
+  </details>
+  <details>
+    <summary>Q5. 내 PC가 3389 포트를 열고 있는지 확인하는 명령은?</summary>
+    <div><p><code>netstat -an | findstr :3389</code>로 LISTENING 줄이 있는지 봅니다. 3389는 원격 데스크톱 포트입니다.</p></div>
+  </details>
+
+  <div class="lab">
+    <h4>실습 8</h4>
+    <label class="task"><input type="checkbox" data-id="f1"><span>조별로 시나리오 2개 이상 토론하고 해설과 비교하기</span></label>
+    <label class="task"><input type="checkbox" data-id="f2"><span>퀴즈 5문제 풀기</span></label>
+    <label class="task"><input type="checkbox" data-id="f3"><span>오늘 실행한 명령 결과를 <code>&gt; 파일명.txt</code>로 저장해 제출하기 (선택)</span></label>
+  </div>
+</section>
+
+<!-- cheat sheet -->
+<section class="mod" id="cheat">
+  <div class="mod-head">
+    <span class="mod-no">+</span>
+    <div>
+      <h2>한눈에 보는 요약표</h2>
+      <p class="goal">“무엇을 알고 싶을 때 어떤 명령?” 순으로 정리했습니다.</p>
+    </div>
+  </div>
+  <div class="tbl"><table>
+    <thead><tr><th>알고 싶은 것</th><th>명령</th><th>PowerShell</th></tr></thead>
+    <tbody>
+      <tr><td>내 IP, 게이트웨이, DNS</td><td><code>ipconfig /all</code></td><td><code>Get-NetIPConfiguration</code></td></tr>
+      <tr><td>상대가 응답하는지</td><td><code>ping</code></td><td><code>Test-Connection</code></td></tr>
+      <tr><td>특정 포트가 열려 있는지</td><td>(없음)</td><td><code>Test-NetConnection -Port</code></td></tr>
+      <tr><td>가는 경로와 느린 구간</td><td><code>tracert</code>, <code>pathping</code></td><td><code>Test-NetConnection -TraceRoute</code></td></tr>
+      <tr><td>도메인의 IP</td><td><code>nslookup</code></td><td><code>Resolve-DnsName</code></td></tr>
+      <tr><td>현재 연결과 열린 포트</td><td><code>netstat -ano</code></td><td><code>Get-NetTCPConnection</code></td></tr>
+      <tr><td>주변 기기의 MAC</td><td><code>arp -a</code></td><td><code>Get-NetNeighbor</code></td></tr>
+      <tr><td>라우팅 표</td><td><code>route print</code></td><td><code>Get-NetRoute</code></td></tr>
+      <tr><td>DNS 캐시 비우기</td><td><code>ipconfig /flushdns</code></td><td><code>Clear-DnsClientCache</code></td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+</main>
+</div>
+
+<footer>컴퓨터공학과 1학년 네트워크 기초 실습. 출력 예시의 주소와 숫자는 설명용이며 실제 환경마다 다릅니다. 실습 체크와 입력한 정보는 이 브라우저에만 저장됩니다.</footer>
+</div>
+
+<script>
+(function(){
+  var store={
+    get:function(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},
+    set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+  };
+
+  // hero typing
+  var typed=document.getElementById('typed'),out=document.getElementById('heroOut'),word='ipconfig';
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches){typed.textContent=word;out.hidden=false}
+  else{var i=0;setTimeout(function tick(){typed.textContent=word.slice(0,++i);if(i<word.length)setTimeout(tick,110);else setTimeout(function(){out.hidden=false;out.classList.add('show')},350)},700)}
+
+  // copy buttons
+  document.querySelectorAll('.copy').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.parentElement.querySelector('code').textContent;
+      var done=function(){b.textContent='복사됨';setTimeout(function(){b.textContent='복사'},1200)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,function(){fallback(t);done()})}
+      else{fallback(t);done()}
+    });
+  });
+  function fallback(t){var ta=document.createElement('textarea');ta.value=t;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()}
+
+  // checklist
+  var checks=store.get('wnl-checks')||{};
+  var boxes=document.querySelectorAll('.task input[type=checkbox]');
+  var pt=document.getElementById('progText'),pb=document.getElementById('progBar');
+  function update(){var n=0;boxes.forEach(function(b){if(b.checked)n++});pt.textContent=n+' / '+boxes.length;pb.style.width=(boxes.length?n/boxes.length*100:0)+'%'}
+  boxes.forEach(function(b){b.checked=!!checks[b.dataset.id];b.addEventListener('change',function(){checks[b.dataset.id]=b.checked;store.set('wnl-checks',checks);update()})});
+  update();
+  document.getElementById('resetBtn').addEventListener('click',function(){checks={};store.set('wnl-checks',checks);boxes.forEach(function(b){b.checked=false});update()});
+
+  // my info fields
+  var info=store.get('wnl-info')||{};
+  document.querySelectorAll('[data-field]').forEach(function(f){f.value=info[f.dataset.field]||'';f.addEventListener('input',function(){info[f.dataset.field]=f.value;store.set('wnl-info',info)})});
+
+  // toc highlight
+  var links=document.querySelectorAll('#toc a'),map={};
+  links.forEach(function(a){map[a.getAttribute('href').slice(1)]=a});
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){links.forEach(function(l){l.classList.remove('on')});var a=map[e.target.id];if(a)a.classList.add('on')}})},{rootMargin:'-30% 0px -60% 0px'});
+    document.querySelectorAll('main section[id]').forEach(function(s){io.observe(s)});
+  }
+})();
+</script>
+</body>
+</html>
