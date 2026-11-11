@@ -1,0 +1,55 @@
+name: Deploy public/ to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["public/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # public/ 아래 index.html이 없는 폴더마다 파일 목록 페이지를 만든다
+      - name: Generate directory listings
+        run: |
+          find public -type d | while read -r dir; do
+            [ -f "$dir/index.html" ] && continue
+            rel="${dir#public}"
+            {
+              echo '<!doctype html><html lang="ko"><head><meta charset="utf-8">'
+              echo '<meta name="viewport" content="width=device-width, initial-scale=1">'
+              echo "<title>Index of ${rel:-/}</title>"
+              echo '<style>body{font-family:system-ui,sans-serif;max-width:720px;margin:40px auto;padding:0 16px;line-height:1.8}a{text-decoration:none}</style>'
+              echo "</head><body><h1>Index of ${rel:-/}</h1><ul>"
+              [ "$dir" != "public" ] && echo '<li><a href="../">../</a></li>'
+              find "$dir" -mindepth 1 -maxdepth 1 -type d ! -name '.*' -printf '%f\n' | sort | while read -r d; do
+                echo "<li><a href=\"$d/\">$d/</a></li>"
+              done
+              find "$dir" -mindepth 1 -maxdepth 1 -type f ! -name '.*' -printf '%f\n' | sort | while read -r f; do
+                echo "<li><a href=\"$f\">$f</a></li>"
+              done
+              echo '</ul></body></html>'
+            } > "$dir/index.html"
+          done
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deployment
+        uses: actions/deploy-pages@v4
